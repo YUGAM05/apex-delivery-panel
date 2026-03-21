@@ -12,7 +12,6 @@ import {
 
 // ─── Validation Rules ─────────────────────────────────────────────────────────
 const validators: Record<string, (val: string) => string> = {
-    // Step 1
     name:                   (v) => v.trim() ? "" : "Full name is required.",
     dob:                    (v) => {
         if (!v.trim()) return "Date of birth is required.";
@@ -28,8 +27,6 @@ const validators: Record<string, (val: string) => string> = {
     email:                  (v) => /^[^\s@]+@gmail\.com$/i.test(v) ? "" : "Email must be a valid @gmail.com address.",
     emergencyContactName:   (v) => v.trim() ? "" : "Emergency contact name is required.",
     emergencyContactNumber: (v) => /^\d{10}$/.test(v) ? "" : "Emergency contact must be exactly 10 digits.",
-
-    // Step 2
     aadhaarNumber:  (v) => /^\d{12}$/.test(v.replace(/\s/g, "")) ? "" : "Aadhaar must be exactly 12 digits.",
     ownerPan:       (v) => /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(v.toUpperCase()) ? "" : "PAN must be 10 alphanumeric chars (e.g. ABCDE1234F).",
     vehicleRegNumber:(v) => v.trim() ? "" : "Vehicle registration number is required.",
@@ -38,20 +35,15 @@ const validators: Record<string, (val: string) => string> = {
         return cleaned.length >= 15 && cleaned.length <= 16 ? "" : "DL number must be 15–16 alphanumeric characters.";
     },
     dlExpiryDate:   (v) => v.trim() ? "" : "DL expiry date is required.",
-
-    // Step 3
     accountHolderName: (v) => v.trim() ? "" : "Account holder name is required.",
     accountNumber:     (v) => /^\d{9,18}$/.test(v) ? "" : "Bank account must be 9 to 18 digits.",
     ifsc:              (v) => /^[A-Z0-9]{11}$/.test(v.trim().toUpperCase()) ? "" : "IFSC must be exactly 11 alphanumeric characters.",
     preferredZones:    (v) => v.trim() ? "" : "Preferred zones/pincodes are required.",
     availableHours:    (v) => v.trim() ? "" : "Working hours are required.",
-
-    // Step 4
     password:        (v) => v.length >= 8 ? "" : "Password must be at least 8 characters.",
     confirmPassword: (v) => v.length >= 8 ? "" : "Please confirm your password.",
 };
 
-// Fields required per step (for step-gate validation)
 const stepFields: Record<number, string[]> = {
     1: ["name","dob","street","city","zip","phone","whatsappNumber","email","emergencyContactName","emergencyContactNumber"],
     2: ["aadhaarNumber","ownerPan","vehicleRegNumber","dlNumber","dlExpiryDate"],
@@ -59,7 +51,6 @@ const stepFields: Record<number, string[]> = {
     4: ["password","confirmPassword"],
 };
 
-// Compliance checkboxes required on Step 4
 const complianceCheckboxes = [
     { name: "noCriminalRecord",       label: "I self-declare that I have no criminal record." },
     { name: "consentBackgroundCheck", label: "I consent to Apex Care conducting a background check." },
@@ -69,7 +60,6 @@ const complianceCheckboxes = [
     { name: "agreedToTerms",          label: "I accept the Delivery Partner Terms & Conditions." },
 ];
 
-// ─── FileInput component ──────────────────────────────────────────────────────
 interface FileInputProps {
     label: string;
     name: string;
@@ -123,7 +113,6 @@ const FileInput = ({ label, name, onUploadComplete, currentUrl }: FileInputProps
     );
 };
 
-// ─── InputField with inline error ─────────────────────────────────────────────
 interface InputFieldProps {
     label: string;
     name: string;
@@ -150,13 +139,12 @@ const InputField = ({
                 <input
                     name={name}
                     type={type}
-                    required
                     placeholder={placeholder}
                     value={formData[name] || ""}
                     onChange={handleChange}
                     onBlur={() => onBlur?.(name)}
                     suppressHydrationWarning
-                    className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 transition-all shadow-sm ${
+                    className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-xl text-sm font-semibold text-gray-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all shadow-sm ${
                         hasError
                             ? "border-red-300 focus:ring-red-200 bg-red-50/30"
                             : "border-gray-200 focus:ring-blue-500/20 focus:border-blue-500"
@@ -174,7 +162,6 @@ const InputField = ({
     );
 };
 
-// ─── Page Component ───────────────────────────────────────────────────────────
 export default function DeliveryRegisterPage() {
     const router = useRouter();
     const [step, setStep] = useState(1);
@@ -184,42 +171,25 @@ export default function DeliveryRegisterPage() {
 
     const [formData, setFormData] = useState({
         password: "", confirmPassword: "",
-
-        // Step 1: Personal & Contact
         name: "", dob: "", gender: "Male",
         street: "", city: "", zip: "",
         phone: "", whatsappNumber: "", email: "",
         emergencyContactName: "", emergencyContactNumber: "",
-
-        // Step 2: KYC & Vehicle
         aadhaarNumber: "", ownerPan: "",
         vehicleType: "Bike", vehicleRegNumber: "",
         dlNumber: "", dlExpiryDate: "",
-
-        // Step 3: Finance & Ops
         accountHolderName: "", accountNumber: "", ifsc: "", upiId: "",
         preferredZones: "", availableHours: "", daysAvailable: "Both", employmentType: "Full-Time",
-
-        // File URLs — Step 2
         aadhaarCardUrl: "", aadhaarBackUrl: "", panCardUrl: "",
         dlFrontUrl: "", dlBackUrl: "", rcUrl: "", insuranceUrl: "",
-
-        // File URLs — Step 3
         cancelledChequeUrl: "",
-
-        // File URLs — Step 4
         policeVerificationUrl: "",
-
-        // Profile
         profilePicture: "",
-
-        // Step 4: Safety & Compliance (all checkboxes)
         noCriminalRecord: false, referenceContact: "",
         agreedToTerms: false, agreedToGpsTracking: false,
         agreedToHandleMeds: false, acknowledgeSla: false, consentBackgroundCheck: false
     });
 
-    // Single-field validator
     const validateField = (name: string, value: string): string => {
         const fn = validators[name];
         if (!fn) return "";
@@ -245,7 +215,6 @@ export default function DeliveryRegisterPage() {
         setFieldErrors(prev => ({ ...prev, [name]: err }));
     };
 
-    // Validate all fields for a given step; returns true if clean
     const validateStep = (s: number): boolean => {
         const fields = stepFields[s] ?? [];
         const newErrors: Record<string, string> = { ...fieldErrors };
@@ -258,13 +227,11 @@ export default function DeliveryRegisterPage() {
             if (err) valid = false;
         }
 
-        // Cross-field: confirm password must match
         if (s === 4) {
             if (formData.password !== formData.confirmPassword) {
                 newErrors["confirmPassword"] = "Passwords do not match.";
                 valid = false;
             }
-            // Compliance checkboxes
             for (const chk of complianceCheckboxes) {
                 if (!(formData as any)[chk.name]) {
                     newErrors[chk.name] = "You must accept this to proceed.";
@@ -279,13 +246,19 @@ export default function DeliveryRegisterPage() {
         return valid;
     };
 
+    // ✅ Fixed: nextStep now uses type="button" so no form submission issues
     const nextStep = () => {
         setError("");
         if (validateStep(step)) {
+            window.scrollTo(0, 0);
             setStep(s => Math.min(s + 1, 4));
         }
     };
-    const prevStep = () => setStep(s => Math.max(s - 1, 1));
+
+    const prevStep = () => {
+        window.scrollTo(0, 0);
+        setStep(s => Math.max(s - 1, 1));
+    };
 
     const handleRegister = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -299,16 +272,6 @@ export default function DeliveryRegisterPage() {
             address: { street: formData.street, city: formData.city, state: "", zip: formData.zip },
             bankDetails: { accountHolderName: formData.accountHolderName, accountNumber: formData.accountNumber, ifsc: formData.ifsc },
             preferredZones: formData.preferredZones.split(',').map(s => s.trim()),
-            profilePicture: formData.profilePicture,
-            aadhaarCardUrl: formData.aadhaarCardUrl,
-            aadhaarBackUrl: formData.aadhaarBackUrl,
-            panCardUrl: formData.panCardUrl,
-            dlFrontUrl: formData.dlFrontUrl,
-            dlBackUrl: formData.dlBackUrl,
-            rcUrl: formData.rcUrl,
-            insuranceUrl: formData.insuranceUrl,
-            cancelledChequeUrl: formData.cancelledChequeUrl,
-            policeVerificationUrl: formData.policeVerificationUrl
         };
 
         try {
@@ -324,13 +287,12 @@ export default function DeliveryRegisterPage() {
 
     return (
         <div className="flex h-screen bg-white overflow-hidden font-sans">
-            {/* Left Side: Visual Hero */}
+            {/* Left Side */}
             <div className="hidden lg:flex w-[45%] relative">
                 <div className="absolute inset-0 z-0">
                     <img src="/delivery-register-hero.png" alt="Join the Fleet" className="w-full h-full object-cover scale-105" />
                     <div className="absolute inset-0 bg-gradient-to-br from-[#1d4ed8] via-[#1e3a8a] to-[#0f172a] opacity-90 mix-blend-multiply z-[1]" />
                 </div>
-
                 <div className="relative z-10 w-full h-full p-8 xl:p-12 flex flex-col justify-between overflow-y-auto no-scrollbar">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-white rounded-full p-0.5 shadow-xl shrink-0 flex items-center justify-center">
@@ -340,7 +302,6 @@ export default function DeliveryRegisterPage() {
                             Apex Care <span className="font-light opacity-80 text-blue-200">Delivery</span>
                         </h2>
                     </div>
-
                     <div className="max-w-lg my-auto py-8">
                         <motion.h1 initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} className="text-4xl xl:text-5xl font-extrabold leading-tight mb-4 text-white">
                             Start Your<br /> Next-Gen Journey.
@@ -348,7 +309,6 @@ export default function DeliveryRegisterPage() {
                         <p className="text-base xl:text-lg text-white/80 font-medium leading-relaxed mb-6">
                             Step into a career that moves you forward and helps millions receive timely care. Follow 4 simple steps to onboard today!
                         </p>
-
                         <div className="space-y-3 xl:space-y-4">
                            {[
                                { step: 1, title: 'Personal & Contact Info', icon: User },
@@ -365,16 +325,14 @@ export default function DeliveryRegisterPage() {
                            ))}
                         </div>
                     </div>
-
                     <div className="text-white/50 text-xs font-medium shrink-0">
                         © 2026 Apex Care Delivery Network. All rights reserved.
                     </div>
                 </div>
             </div>
 
-            {/* Right Side: Wizard Form */}
+            {/* Right Side */}
             <div className="w-full lg:w-[55%] flex flex-col h-full overflow-hidden bg-slate-50 relative">
-                {/* Header Actions */}
                 <div className="absolute top-0 w-full p-6 flex justify-between items-center z-20 pointer-events-none">
                     <div className="pointer-events-auto">
                         {step > 1 && (
@@ -402,7 +360,8 @@ export default function DeliveryRegisterPage() {
                 </div>
 
                 <div className="flex-1 overflow-y-auto px-8 xl:px-20 pb-20 no-scrollbar">
-                    <form onSubmit={step === 4 ? handleRegister : (e) => { e.preventDefault(); nextStep(); }} className="space-y-6" noValidate>
+                    {/* ✅ Fixed: form only handles step 4 submit, steps 1-3 use button type="button" */}
+                    <form onSubmit={handleRegister} className="space-y-6">
                         {error && (
                             <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="p-3 bg-red-50 border border-red-100 rounded-xl text-red-600 text-xs font-bold flex items-center gap-2">
                                 <AlertCircle className="w-4 h-4" /> {error}
@@ -412,7 +371,7 @@ export default function DeliveryRegisterPage() {
                         <AnimatePresence mode="wait">
                             <motion.div key={step} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={{ duration: 0.2 }} className="space-y-6">
 
-                                {/* ── STEP 1: PERSONAL & CONTACT ── */}
+                                {/* STEP 1 */}
                                 {step === 1 && (
                                     <>
                                         <div className="grid grid-cols-2 gap-4">
@@ -424,13 +383,12 @@ export default function DeliveryRegisterPage() {
                                                     <input
                                                         name="dob"
                                                         type="date"
-                                                        required
                                                         value={formData.dob}
                                                         onChange={handleChange}
                                                         onBlur={() => handleBlur("dob")}
                                                         max={(() => { const d = new Date(); d.setFullYear(d.getFullYear() - 18); return d.toISOString().split('T')[0]; })()}
                                                         suppressHydrationWarning
-                                                        className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 transition-all shadow-sm ${fieldErrors.dob ? "border-red-300 focus:ring-red-200 bg-red-50/30" : "border-gray-200 focus:ring-blue-500/20 focus:border-blue-500"}`}
+                                                        className={`w-full pl-10 pr-4 py-2.5 bg-white border rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 transition-all shadow-sm ${fieldErrors.dob ? "border-red-300 focus:ring-red-200 bg-red-50/30" : "border-gray-200 focus:ring-blue-500/20 focus:border-blue-500"}`}
                                                     />
                                                 </div>
                                                 {fieldErrors.dob
@@ -445,7 +403,7 @@ export default function DeliveryRegisterPage() {
                                                 <label className="text-[10px] uppercase tracking-widest font-black text-slate-400 ml-1">Gender</label>
                                                 <div className="relative">
                                                     <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                                    <select name="gender" required value={formData.gender} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
+                                                    <select name="gender" value={formData.gender} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
                                                         <option value="Male">Male</option>
                                                         <option value="Female">Female</option>
                                                         <option value="Other">Other</option>
@@ -461,13 +419,12 @@ export default function DeliveryRegisterPage() {
                                                 <MapPin className={`absolute left-3.5 top-3.5 w-4 h-4 ${fieldErrors.street ? "text-red-400" : "text-slate-400"}`} />
                                                 <textarea
                                                     name="street"
-                                                    required
                                                     value={formData.street}
                                                     onChange={handleChange}
                                                     onBlur={() => handleBlur("street")}
                                                     rows={2}
                                                     placeholder="House No, Area..."
-                                                    className={`w-full pl-10 pr-4 py-3 bg-white border rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 resize-none shadow-sm ${fieldErrors.street ? "border-red-300 focus:ring-red-200 bg-red-50/30" : "border-gray-200 focus:ring-blue-500/20"}`}
+                                                    className={`w-full pl-10 pr-4 py-3 bg-white border rounded-xl text-sm font-semibold text-gray-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 resize-none shadow-sm ${fieldErrors.street ? "border-red-300 focus:ring-red-200 bg-red-50/30" : "border-gray-200 focus:ring-blue-500/20"}`}
                                                 />
                                             </div>
                                             {fieldErrors.street && <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500 ml-1"><AlertCircle className="w-3 h-3 shrink-0" />{fieldErrors.street}</p>}
@@ -494,7 +451,7 @@ export default function DeliveryRegisterPage() {
                                     </>
                                 )}
 
-                                {/* ── STEP 2: KYC & VEHICLE ── */}
+                                {/* STEP 2 */}
                                 {step === 2 && (
                                     <>
                                         <div className="bg-slate-100/50 p-4 rounded-xl border border-slate-100 mb-2">
@@ -517,7 +474,7 @@ export default function DeliveryRegisterPage() {
                                                     <label className="text-[10px] uppercase tracking-widest font-black text-slate-400 ml-1">Vehicle Type</label>
                                                     <div className="relative">
                                                         <Truck className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                                        <select name="vehicleType" required value={formData.vehicleType} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
+                                                        <select name="vehicleType" value={formData.vehicleType} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
                                                             <option value="Bike">Bike / Motorcycle</option>
                                                             <option value="Scooter">Scooter</option>
                                                             <option value="E-Bike">Electric Vehicle</option>
@@ -543,7 +500,7 @@ export default function DeliveryRegisterPage() {
                                     </>
                                 )}
 
-                                {/* ── STEP 3: FINANCE & OPS ── */}
+                                {/* STEP 3 */}
                                 {step === 3 && (
                                     <>
                                         <div className="bg-slate-100/50 p-4 rounded-xl border border-slate-100 mb-2">
@@ -558,7 +515,7 @@ export default function DeliveryRegisterPage() {
                                                     <label className="text-[10px] uppercase tracking-widest font-black text-slate-400 ml-1">UPI ID <span className="lowercase text-[9px] font-semibold">(Optional)</span></label>
                                                     <div className="relative">
                                                         <CreditCard className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                                        <input name="upiId" type="text" value={formData.upiId} onChange={handleChange} placeholder="name@bank" className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm" />
+                                                        <input name="upiId" type="text" value={formData.upiId} onChange={handleChange} placeholder="name@bank" className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm" />
                                                     </div>
                                                 </div>
                                                 <FileInput label="Cancelled Cheque" name="cancelledChequeUrl" onUploadComplete={(url) => setFormData(p => ({...p, cancelledChequeUrl: url}))} currentUrl={formData.cancelledChequeUrl} />
@@ -568,14 +525,13 @@ export default function DeliveryRegisterPage() {
                                         <div className="bg-slate-100/50 p-4 rounded-xl border border-slate-100">
                                             <h3 className="text-sm font-bold text-slate-800 mb-3 flex items-center gap-2"><Clock className="w-4 h-4 text-purple-600"/> Operational Preferences</h3>
                                             <InputField formData={formData} handleChange={handleChange} fieldErrors={fieldErrors} onBlur={handleBlur} label="Preferred Pincodes/Zones" name="preferredZones" icon={MapPin} placeholder="e.g. 380001, 380009" />
-
                                             <div className="grid grid-cols-2 gap-4 mt-4">
                                                 <InputField formData={formData} handleChange={handleChange} fieldErrors={fieldErrors} onBlur={handleBlur} label="Working Hours" name="availableHours" icon={Clock} placeholder="4 PM - 11 PM" />
                                                 <div className="space-y-1.5">
                                                     <label className="text-[10px] uppercase tracking-widest font-black text-slate-400 ml-1">Days Available</label>
                                                     <div className="relative">
                                                         <Calendar className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                                        <select name="daysAvailable" value={formData.daysAvailable} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
+                                                        <select name="daysAvailable" value={formData.daysAvailable} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
                                                             <option value="Both">Weekdays & Weekends</option>
                                                             <option value="Weekdays">Weekdays Only</option>
                                                             <option value="Weekends">Weekends Only</option>
@@ -583,12 +539,11 @@ export default function DeliveryRegisterPage() {
                                                     </div>
                                                 </div>
                                             </div>
-
                                             <div className="space-y-1.5 mt-4">
                                                 <label className="text-[10px] uppercase tracking-widest font-black text-slate-400 ml-1">Employment</label>
                                                 <div className="relative">
                                                     <Briefcase className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                                    <select name="employmentType" value={formData.employmentType} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
+                                                    <select name="employmentType" value={formData.employmentType} onChange={handleChange} className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer">
                                                         <option value="Full-Time">Full-Time (8+ Hrs)</option>
                                                         <option value="Part-Time">Part-Time / Gig Worker</option>
                                                     </select>
@@ -598,7 +553,7 @@ export default function DeliveryRegisterPage() {
                                     </>
                                 )}
 
-                                {/* ── STEP 4: COMPLIANCE & SETUP ── */}
+                                {/* STEP 4 */}
                                 {step === 4 && (
                                     <div className="space-y-6">
                                         <div className="bg-slate-100/50 p-4 rounded-xl border border-slate-100">
@@ -611,12 +566,10 @@ export default function DeliveryRegisterPage() {
                                                     <label className="text-[10px] uppercase tracking-widest font-black text-slate-400 ml-1">Reference Details <span className="lowercase text-[9px] font-semibold">(Optional)</span></label>
                                                     <div className="relative">
                                                         <User className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                                                        <input name="referenceContact" type="text" value={formData.referenceContact} onChange={handleChange} placeholder="Name & Number" className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm" />
+                                                        <input name="referenceContact" type="text" value={formData.referenceContact} onChange={handleChange} placeholder="Name & Number" className="w-full pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm font-semibold text-gray-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition-all shadow-sm" />
                                                     </div>
                                                 </div>
                                             </div>
-
-                                            {/* Compliance Checkboxes — all required */}
                                             <div className="mb-2 flex items-center justify-between">
                                                 <h4 className="text-xs font-bold text-slate-700 flex items-center gap-2">
                                                     <BadgeCheck className="w-4 h-4 text-blue-500" /> Terms & Compliance
@@ -630,7 +583,6 @@ export default function DeliveryRegisterPage() {
                                                             <input
                                                                 type="checkbox"
                                                                 name={chk.name}
-                                                                required
                                                                 checked={formData[chk.name as keyof typeof formData] as boolean}
                                                                 onChange={handleChange}
                                                                 className={`mt-1 w-4 h-4 rounded focus:ring-blue-500 ${fieldErrors[chk.name] ? "border-red-400 text-red-500" : "text-blue-600 border-gray-300"}`}
@@ -657,13 +609,12 @@ export default function DeliveryRegisterPage() {
                                                     <input
                                                         name="password"
                                                         type="password"
-                                                        required
                                                         value={formData.password}
                                                         onChange={handleChange}
                                                         onBlur={() => handleBlur("password")}
                                                         suppressHydrationWarning
                                                         placeholder="••••••••"
-                                                        className={`w-full pl-10 pr-11 py-3 bg-white border rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 transition-all shadow-sm ${fieldErrors.password ? "border-red-300 focus:ring-red-200 bg-red-50/30" : "border-gray-200 focus:ring-blue-500/20"}`}
+                                                        className={`w-full pl-10 pr-11 py-3 bg-white border rounded-xl text-sm font-semibold text-gray-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all shadow-sm ${fieldErrors.password ? "border-red-300 focus:ring-red-200 bg-red-50/30" : "border-gray-200 focus:ring-blue-500/20"}`}
                                                     />
                                                 </div>
                                                 {fieldErrors.password && <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500 ml-1"><AlertCircle className="w-3 h-3 shrink-0" />{fieldErrors.password}</p>}
@@ -675,13 +626,12 @@ export default function DeliveryRegisterPage() {
                                                     <input
                                                         name="confirmPassword"
                                                         type="password"
-                                                        required
                                                         value={formData.confirmPassword}
                                                         onChange={handleChange}
                                                         onBlur={() => handleBlur("confirmPassword")}
                                                         suppressHydrationWarning
                                                         placeholder="••••••••"
-                                                        className={`w-full pl-10 pr-11 py-3 bg-white border rounded-xl text-sm font-semibold focus:outline-none focus:ring-2 transition-all shadow-sm ${fieldErrors.confirmPassword ? "border-red-300 focus:ring-red-200 bg-red-50/30" : "border-gray-200 focus:ring-blue-500/20"}`}
+                                                        className={`w-full pl-10 pr-11 py-3 bg-white border rounded-xl text-sm font-semibold text-gray-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 transition-all shadow-sm ${fieldErrors.confirmPassword ? "border-red-300 focus:ring-red-200 bg-red-50/30" : "border-gray-200 focus:ring-blue-500/20"}`}
                                                     />
                                                 </div>
                                                 {fieldErrors.confirmPassword && <p className="flex items-center gap-1 text-[11px] font-semibold text-red-500 ml-1"><AlertCircle className="w-3 h-3 shrink-0" />{fieldErrors.confirmPassword}</p>}
@@ -693,16 +643,26 @@ export default function DeliveryRegisterPage() {
                         </AnimatePresence>
 
                         <div className="pt-6 border-t border-slate-100 mt-8">
-                            <button
-                                suppressHydrationWarning
-                                disabled={loading}
-                                type="submit"
-                                className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-sm shadow-xl shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
-                            >
-                                {loading ? <Loader2 className="w-5 h-5 animate-spin" /> :
-                                 step === 4 ? <>Submit Application <CheckCircle2 className="w-5 h-5" /></> :
-                                 <>Continue to Next Step <ArrowRight className="w-5 h-5" /></>}
-                            </button>
+                            {/* ✅ Fixed: type="button" for steps 1-3, type="submit" only for step 4 */}
+                            {step < 4 ? (
+                                <button
+                                    type="button"
+                                    onClick={nextStep}
+                                    suppressHydrationWarning
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-sm shadow-xl shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                                >
+                                    Continue to Next Step <ArrowRight className="w-5 h-5" />
+                                </button>
+                            ) : (
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    suppressHydrationWarning
+                                    className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 rounded-xl font-black text-sm shadow-xl shadow-blue-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3"
+                                >
+                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Submit Application <CheckCircle2 className="w-5 h-5" /></>}
+                                </button>
+                            )}
                         </div>
                     </form>
                 </div>
