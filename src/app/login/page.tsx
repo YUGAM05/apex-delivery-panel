@@ -191,6 +191,7 @@ export default function DeliveryLoginPage() {
                                             placeholder="partner@gmail.com"
                                             type="email"
                                             required
+                                            suppressHydrationWarning
                                         />
                                     </div>
                                 </div>
@@ -216,11 +217,13 @@ export default function DeliveryLoginPage() {
                                             placeholder="••••••••"
                                             type={showPassword ? "text" : "password"}
                                             required
+                                            suppressHydrationWarning
                                         />
                                         <button
                                             onClick={() => setShowPassword(!showPassword)}
                                             className="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-400 hover:text-gray-600 transition-colors"
                                             type="button"
+                                            suppressHydrationWarning
                                         >
                                             {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                         </button>
@@ -231,6 +234,7 @@ export default function DeliveryLoginPage() {
                                     className="w-full bg-[#1d6cf0] hover:bg-black text-white font-black py-4 px-6 rounded-2xl shadow-xl shadow-[#1d6cf0]/20 transition-all transform active:scale-[0.99] flex items-center justify-center gap-2 group"
                                     type="submit"
                                     disabled={loading}
+                                    suppressHydrationWarning
                                 >
                                     {loading ? (
                                         <Loader2 className="w-6 h-6 animate-spin" />

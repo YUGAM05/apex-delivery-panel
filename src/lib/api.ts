@@ -9,6 +9,11 @@ const api = axios.create({
 
 // Add a request interceptor to include the auth token
 api.interceptors.request.use((config: InternalAxiosRequestConfig) => {
+    // Let browser auto-generate multipart boundaries for FormData
+    if (typeof FormData !== 'undefined' && config.data instanceof FormData) {
+        delete config.headers['Content-Type'];
+    }
+
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (token) {
         config.headers.Authorization = `Bearer ${token}`;
